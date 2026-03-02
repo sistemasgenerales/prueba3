@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>REY LIMA – SISTEMA UNIFICADO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+  
+  <style>
+    /* VARIABLES Y ESTILOS BASE */
+    :root{
+      --bg:#0b1220; --panel:#0f172a; --card:#111827; --white:#ffffff;
+      --muted:rgba(255,255,255,.72); --muted2:rgba(255,255,255,.55);
+      --line:rgba(255,255,255,.10); --primary:#2563eb; --danger:#ef4444;
+      --ok:#22c55e; --warning:#f59e0b; --radius:22px; --radius2:18px;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --fsTitle: clamp(34px, 6vw, 52px); --fsSub: clamp(16px, 3vw, 22px);
+      --fsInput: clamp(22px, 4.4vw, 28px); --fsBtn: clamp(22px, 4.4vw, 28px);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; overscroll-behavior: contain; -webkit-text-size-adjust: 100%; }
+    body{
+      margin:0; font-family:Inter,system-ui,-apple-system,sans-serif;
+      background: radial-gradient(1200px 700px at 50% 30%, rgba(37,99,235,.15), transparent 60%),
+                  radial-gradient(900px 600px at 50% 90%, rgba(34,197,94,.08), transparent 60%), var(--bg);
+      color:var(--white);
+    }
+    .screen{ min-height: 100svh; padding: calc(16px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom)) 14px; }
+    
+    /* LOGIN */
+    .loginFull{ display:flex; align-items:center; justify-content:center; }
+    .loginFullShell{ width: 100%; max-width: 980px; display:flex; flex-direction:column; gap: 22px; padding: 10px 6px; }
+    .brand{ text-align:center; padding: 6px 10px 0; }
+    .brandTitle{ font-size: var(--fsTitle); font-weight: 900; letter-spacing:1px; line-height:1.02; }
+    .brandSub{ margin-top:10px; font-size: var(--fsSub); font-weight: 900; color: var(--muted); }
+    .loginFullCard{ width: 100%; background: rgba(17,24,39,.94); border: 1px solid var(--line); border-radius: 28px; box-shadow: var(--shadow); padding: 22px; }
+    .lbl{ display:block; font-weight: 900; color: var(--muted); margin: 6px 0 10px; font-size: 14px; letter-spacing:.2px; }
+    
+    /* INPUTS & BTNS */
+    .inp{ width:100%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); color: var(--white); border-radius: 18px; padding: 16px 16px; outline:none; margin-bottom: 12px; }
+    .inp:focus{ border-color: rgba(37,99,235,.75); box-shadow: 0 0 0 4px rgba(37,99,235,.20); }
+    .inpMega{ padding: 22px 18px; border-radius: 20px; font-size: clamp(26px, 5vw, 34px); letter-spacing: 6px; text-align:center; }
+    .btn{ border:none; border-radius: 18px; padding: 16px 18px; font-weight: 900; font-size: 18px; cursor:pointer; width:100%; color: var(--white); background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.12); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .btn:active{ transform: scale(.99); }
+    .btn.primary{ background: linear-gradient(180deg, rgba(37,99,235,1), rgba(29,78,216,1)); border: 1px solid rgba(255,255,255,.10); }
+    .btnMega{ padding: 22px 18px; border-radius: 20px; margin-top: 16px; font-size: clamp(24px, 4.8vw, 32px); }
+    .btn.ghost{ background: rgba(255,255,255,.08); }
+    .smallHint{ text-align:center; margin-top: 12px; font-size: 13px; font-weight: 800; color: var(--muted2); }
+    
+    /* TOPBAR & SIDEBAR */
+    .topbar{ position: sticky; top: 0; z-index: 20; display:flex; align-items:center; justify-content:space-between; gap: 10px; padding: 12px 10px; margin: 0 -14px; background: rgba(11,18,32,.88); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.10); }
+    .topbarLeft { display:flex; align-items:center; gap: 12px; }
+    .menuBtn { background: transparent; border: none; color: white; font-size: 28px; padding: 4px 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .menuBtn:active { background: rgba(255,255,255,0.1); }
+    .h1{ font-weight: 900; font-size: 18px; }
+    .h2{ font-weight: 800; font-size: 13px; color: var(--muted); margin-top:2px; }
+
+    #sidebarBackdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:90; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+    #sidebarBackdrop.open{ opacity:1; pointer-events:all; backdrop-filter: blur(4px); }
+    #sidebar{ position:fixed; top:0; left:0; bottom:0; width:280px; background: var(--card); z-index:100; transform:translateX(-100%); transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-right: 1px solid var(--line); display:flex; flex-direction:column; padding: calc(20px + env(safe-area-inset-top)) 20px 20px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+    #sidebar.open{ transform:translateX(0); }
+    .sideHeader{ font-size:24px; font-weight:900; margin-bottom:30px; color:var(--white); text-align:center; letter-spacing: 1px;}
+    .sideItem{ background:none; border:none; color:var(--muted); text-align:left; padding: 16px; font-size:18px; font-weight:800; border-radius:14px; margin-bottom:12px; cursor:pointer; transition: all 0.2s; display:flex; align-items:center; gap:12px; }
+    .sideItem.active{ background:rgba(37,99,235,.15); color:var(--primary); }
+    .sideItem:active{ background:rgba(255,255,255,.05); transform: scale(0.98); }
+    
+    /* VISTA QR */
+    .qrCard { background: rgba(17,24,39,.94); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-top: 16px; box-shadow: var(--shadow); }
+    select.inp { appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.85rem auto; }
+    #qr-reader{ margin: 16px 0; border-radius:18px; overflow:hidden; display:none; border: 2px solid var(--line); background:#000; }
+    .statusMsg{ text-align:center; font-weight:800; margin: 12px 0; border-radius: 12px; padding: 12px;}
+    .statusMsg.ok { background: rgba(34,197,94,.15); color: var(--ok); border: 1px solid rgba(34,197,94,.3); }
+    .statusMsg.err { background: rgba(239,68,68,.15); color: var(--danger); border: 1px solid rgba(239,68,68,.3); }
+    .statusMsg.load { background: rgba(255,255,255,.05); color: var(--muted); border: 1px solid var(--line); }
+
+    /* TABLAS */
+    .tableScroll{ overflow-x:auto; border-radius:14px; border:1px solid var(--line); background:var(--card); margin-top: 16px; }
+    table{ width:100%; border-collapse:collapse; white-space:nowrap; }
+    th{ background:rgba(255,255,255,.08); padding:14px 12px; text-align:left; font-size:13px; color:var(--muted); font-weight:800; position:sticky; top:0; z-index: 5; }
+    td{ padding:14px 12px; border-top:1px solid var(--line); font-size:14px; vertical-align:middle; }
+    
+    /* PANEL ESPECÍFICO */
+    .panelLegend{ font-size:12px; color:var(--muted); margin-top:16px; background:rgba(255,255,255,.05); padding:12px; border-radius:12px; line-height: 1.5; font-weight: 600;}
+    .st-A{ color: var(--ok); font-weight:bold; }
+    .st-T{ color: var(--warning); font-weight:bold; }
+    .st-F{ color: var(--danger); font-weight:bold; }
+    .tdSelect{ background:var(--bg); color:#fff; border:1px solid var(--line); padding:8px; border-radius:8px; font-size:14px; width:80px; font-weight: 700;}
+    .tdBtn{ background:rgba(255,255,255,.1); border:none; border-radius:8px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; }
+    .tdVal{ margin-right:6px; font-weight:bold; }
+    
+    /* MODAL */
+    .modalMask{ position: fixed; inset: 0; background: rgba(0,0,0,.62); backdrop-filter: blur(8px); z-index: 9999; display:none; align-items:center; justify-content:center; padding: 18px; }
+    .modalMask.show{ display:flex; }
+    .modalBox{ width: min(640px, 100%); background: rgba(17,24,39,.98); border: 1px solid rgba(255,255,255,.14); border-radius: 22px; box-shadow: 0 25px 70px rgba(0,0,0,.65); padding: 20px; }
+    .modalTitle{ font-weight: 900; font-size: 20px; color: rgba(255,255,255,.92); margin: 0 0 16px; text-align: center;}
+    .modalInput{ width:100%; border-radius: 18px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color:#fff; outline:none; padding: 18px 16px; font-weight: 900; font-size: 26px !important; line-height: 1.2; text-align: center;}
+    .modalInputArea{ min-height: 120px; resize:none; font-size: 18px !important; font-weight: 600; text-align: left;}
+    .modalBtns{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+    .modalBtn{ border:none; border-radius: 18px; padding: 16px 14px; font-weight: 900; font-size: 18px; cursor:pointer; width:100%; color: #fff; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.12); }
+    .modalBtn.primary{ background: linear-gradient(180deg, rgba(37,99,235,1), rgba(29,78,216,1)); }
+    .modalBtn.danger{ background: rgba(239,68,68,.22); border-color: rgba(239,68,68,.35); color: var(--danger);}
+    input, select, textarea { font-size: 16px !important; touch-action: manipulation; }
+  </style>
+</head>
+<body>
+
+<section id="loginWrap" class="screen loginFull">
+  <div class="loginFullShell">
+    <div class="brand">
+      <div class="brandTitle">REY LIMA</div>
+      <div class="brandSub">Sistema Integrado</div>
+    </div>
+    <div class="loginFullCard">
+      <label class="lbl lblBig" for="pin" style="text-align: center;">Ingrese PIN de Acceso</label>
+      <input id="pin" class="inp inpMega" type="password" inputmode="numeric" maxlength="10" placeholder="****" />
+      <button id="btnLogin" class="btn btnMega primary" onclick="iniciarSesion()">Ingresar</button>
+      <div class="smallHint">Asistencia QR & Panel Supervisor</div> 
+    </div>
+  </div>
+</section>
+
+<section id="app" class="screen" style="display:none; padding-top: 0;">
+  
+  <header class="topbar">
+    <div class="topbarLeft">
+      <button class="menuBtn" onclick="toggleSidebar()">☰</button>
+      <div>
+        <div class="h1" id="topbarTitle">Registro QR</div>
+        <div class="h2">REY LIMA</div> 
+      </div>
+    </div>
+  </header>
+
+  <div id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+  <nav id="sidebar">
+    <div class="sideHeader">REY LIMA</div>
+    <button id="btnNavQR" class="sideItem active" onclick="switchView('qr')">📷 Escáner QR</button>
+    <button id="btnNavPanel" class="sideItem" onclick="switchView('panel')">📊 Panel Supervisor</button>
+    <div style="flex-grow: 1;"></div> 
+    <button class="sideItem" style="color: var(--danger);" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+  </nav>
+
+  <div id="viewQR">
+    <div class="qrCard">
+      <select id="tipo" class="inp">
+        <option value="">-- Seleccionar Marcación --</option>
+        <option value="Entrada">ENTRADA</option>
+        <option value="Salida">SALIDA</option>
+        <option value="Salida Refrigerio">SALIDA A REFRIGERIO</option>
+        <option value="Entrada Refrigerio">ENTRADA A REFRIGERIO</option>
+      </select>
+
+      <button onclick="toggleCamara()" id="btnCamara" class="btn ghost" style="border: 2px dashed var(--line);">📸 Iniciar Cámara QR</button>
+      
+      <div id="qr-reader"></div>
+
+      <div style="margin: 20px 0; border-top: 1px solid var(--line); position: relative;">
+         <span style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--card); padding: 0 10px; font-size: 12px; font-weight: bold; color: var(--muted);">O INGRESO MANUAL</span>
+      </div>
+
+      <input type="text" id="dniManual" class="inp" placeholder="Ingresar DNI / Documento">
+      <input type="text" id="observacion" class="inp" placeholder="Observación (Opcional)">
+      <button onclick="registrarManual()" class="btn primary" style="margin-top: 8px;">Registrar Manualmente</button>
+
+      <div id="mensajeQR"></div>
+    </div>
+
+    <div class="tableScroll">
+      <table id="tablaQR">
+        <thead>
+          <tr><th>Hora</th><th>Colaborador</th><th>Marcación</th></tr>
+        </thead>
+        <tbody id="historialQR">
+          <tr><td colspan='3' style='padding:20px; text-align:center; color:var(--muted);'>⚡ Las marcaciones recientes aparecerán aquí</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="viewPanel" style="display:none;">
+    <div class="panelLegend">
+      <strong>Leyenda:</strong> A:Asistió, T:Tarde, F:Falta, V:Vacaciones, DL:Día Libre, DM:Descanso Médico, S:Suspensión.
+    </div>
+    
+    <div class="tableScroll">
+      <table id="panelTable">
+        <thead>
+          <tr><th>Colaborador</th> <th>Tipo</th> <th>Tareo</th> <th>Min</th> <th>N.Tar</th> <th>N.Min</th> <th>Obs</th> </tr>
+        </thead>
+        <tbody id="panelBody">
+          <tr><td colspan="7" style="text-align:center; padding:30px; font-weight:bold;">Selecciona "Actualizar Tabla" para cargar datos.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="text-align:center; margin-top:20px; margin-bottom:40px;">
+      <button id="btnRefreshPanel" class="btn ghost" onclick="loadPanelData()">🔄 Actualizar Tabla del Día</button>
+    </div>
+  </div>
+
+</section>
+
+<div id="modalMask" class="modalMask">
+  <div class="modalBox">
+    <div id="modalTitle" class="modalTitle">Editar</div>
+    <input id="modalInput" class="modalInput" type="text" autocomplete="off" />
+    <textarea id="modalArea" class="modalInput modalInputArea" style="display:none"></textarea>
+    <div class="modalBtns">
+      <button id="modalCancel" class="modalBtn danger" onclick="closeModal()">Cancelar</button>
+      <button id="modalOk" class="modalBtn primary">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================================
+// LÓGICA DE LA SPA (SINGLE PAGE APPLICATION)
+// =========================================================
+
+const API_URL = "https://script.google.com/macros/s/AKfycbwN32MDpk4ETHcCZFPX10I1WTJASAbxyxKSeQq6u0pTre8mRUFVH126N5znkKxOfA5eFQ/exec";
+
+let sessionToken = null;
+let currentView = 'qr';
+
+const elLogin = document.getElementById('loginWrap');
+const elApp = document.getElementById('app');
+const sidebar = document.getElementById('sidebar');
+const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+const topbarTitle = document.getElementById('topbarTitle');
+
+async function fetchAPI(payload) {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    return await response.json();
+  } catch (error) {
+    return { ok: false, msg: "Error de red conectando al servidor de Google." };
+  }
+}
+
+async function iniciarSesion() {
+  const pinInput = document.getElementById('pin');
+  const btn = document.getElementById('btnLogin');
+  const pin = pinInput.value.trim();
+  
+  if (!pin) { alert("Ingrese el PIN"); return; }
+  
+  btn.textContent = "Verificando...";
+  btn.disabled = true;
+
+  const res = await fetchAPI({ action: 'login_panel', pin: pin });
+  
+  btn.textContent = "Ingresar";
+  btn.disabled = false;
+
+  if (res.ok) {
+    sessionToken = res.token;
+    elLogin.style.display = 'none';
+    elApp.style.display = 'block';
+    pinInput.value = '';
+    switchView('qr');
+  } else {
+    alert("PIN Incorrecto");
+  }
+}
+
+function cerrarSesion() {
+  if (confirm("¿Seguro que deseas cerrar sesión?")) {
+    sessionToken = null;
+    elApp.style.display = 'none';
+    elLogin.style.display = 'flex';
+    toggleSidebar(false); 
+    detenerQR(); 
+  }
+}
+
+function toggleSidebar(forceClose = false) {
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen || forceClose) {
+    sidebar.classList.remove('open');
+    sidebarBackdrop.classList.remove('open');
+  } else {
+    sidebar.classList.add('open');
+    sidebarBackdrop.classList.add('open');
+  }
+}
+
+function switchView(viewName) {
+  currentView = viewName;
+  document.getElementById('viewQR').style.display = 'none';
+  document.getElementById('viewPanel').style.display = 'none';
+  document.getElementById('btnNavQR').classList.remove('active');
+  document.getElementById('btnNavPanel').classList.remove('active');
+
+  if (viewName === 'qr') {
+    document.getElementById('viewQR').style.display = 'block';
+    document.getElementById('btnNavQR').classList.add('active');
+    topbarTitle.textContent = "Registro QR";
+  } else if (viewName === 'panel') {
+    document.getElementById('viewPanel').style.display = 'block';
+    document.getElementById('btnNavPanel').classList.add('active');
+    topbarTitle.textContent = "Panel Supervisor";
+    detenerQR(); 
+    loadPanelData(); 
+  }
+  toggleSidebar(true); 
+}
+
+// ----------------------------------------
+// LÓGICA DEL ESCÁNER QR OPTIMIZADA
+// ----------------------------------------
+let qrScanner;
+let camaraActiva = false;
+let ultimoQR = "";
+let ultimoTiempo = 0;
+
+// SONIDO PROFESIONAL INTACTO Y RESTAURADO
+function reproducirBeepExito() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+
+    function playNote(frequency, startTime, duration) {
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.8, startTime + 0.02); 
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration); 
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    }
+
+    playNote(1200, now, 0.15);         
+    playNote(1600, now + 0.15, 0.25);  
+  } catch (e) { console.error("Sin soporte de audio", e); }
+}
+
+function toggleCamara(){
+  camaraActiva ? detenerQR() : iniciarQR();
+}
+
+function iniciarQR(){
+  qrScanner = new Html5Qrcode("qr-reader");
+  document.getElementById("qr-reader").style.display = "block";
+  document.getElementById("btnCamara").innerHTML = "🛑 Detener Cámara";
+  document.getElementById("btnCamara").style.borderColor = "var(--danger)";
+  camaraActiva = true;
+
+  // OPTIMIZACIÓN GAMA BAJA: fps bajado a 10
+  qrScanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 }, disableFlip: false },
+    (decodedText) => {
+      const ahora = Date.now();
+      if(decodedText === ultimoQR && ahora - ultimoTiempo < 2500) return;
+      ultimoQR = decodedText;
+      ultimoTiempo = ahora;
+      
+      reproducirBeepExito();
+      procesarMarcacion(decodedText.trim(), "QR", "");
+    }
+  ).catch(err => {
+    mostrarMensajeQR("Permiso de cámara denegado.", false);
+    detenerQR();
+  });
+}
+
+function detenerQR(){
+  if(qrScanner && camaraActiva){
+    qrScanner.stop().then(() => {
+      document.getElementById("qr-reader").style.display = "none";
+      document.getElementById("btnCamara").innerHTML = "📸 Iniciar Cámara QR";
+      document.getElementById("btnCamara").style.borderColor = "var(--line)";
+      camaraActiva = false;
+    }).catch(e => console.log(e));
+  }
+}
+
+function registrarManual(){
+  const dni = document.getElementById("dniManual").value.trim();
+  const obs = document.getElementById("observacion").value.trim();
+  procesarMarcacion(dni, "Manual", obs);
+}
+
+function mostrarMensajeQR(htmlMsg, isOk, isLoad = false) {
+  const div = document.getElementById("mensajeQR");
+  div.className = "statusMsg " + (isLoad ? "load" : (isOk ? "ok" : "err"));
+  div.innerHTML = htmlMsg;
+  if(!isLoad) {
+     setTimeout(() => { if(div.innerHTML === htmlMsg) div.className = ""; div.innerHTML=""; }, 4000);
+  }
+}
+
+async function procesarMarcacion(valor, origen, obs) {
+  const tipo = document.getElementById("tipo").value;
+  if(!tipo){ mostrarMensajeQR("⚠️ Seleccione tipo de marcación arriba.", false); return; }
+  if(!valor){ mostrarMensajeQR("⚠️ Ingrese DNI o EID.", false); return; }
+
+  mostrarMensajeQR("⏳ Registrando en servidor...", true, true);
+
+  // SOLUCIÓN: Agregado el envío del token de sesión al backend
+  const res = await fetchAPI({
+    action: "registrar_qr",
+    token: sessionToken, 
+    dni: valor,
+    tipo: tipo,
+    origen: origen,
+    observacion: obs
+  });
+
+  if(res.ok){
+    mostrarMensajeQR(`✅ Registrado: <b>${res.show.nombre}</b>`, true);
+    document.getElementById("dniManual").value = "";
+    document.getElementById("observacion").value = "";
+    agregarFilaHistorial(res.show);
+  } else {
+    mostrarMensajeQR(`❌ Error: ${res.msg}`, false);
+  }
+}
+
+function agregarFilaHistorial(dataShow){
+  const tbody = document.getElementById("historialQR");
+  if(tbody.innerHTML.includes("⚡")) tbody.innerHTML = "";
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td style="font-weight:bold;">${dataShow.hora}</td>
+    <td style="font-weight:700;">${dataShow.nombre}</td>
+    <td style="color:var(--primary); font-weight:800;">${dataShow.tipo}</td>
+  `;
+  tbody.insertBefore(tr, tbody.firstChild);
+}
+
+// ----------------------------------------
+// LÓGICA DEL PANEL SUPERVISOR
+// ----------------------------------------
+let editContext = null; 
+let modalMode = null;
+const modalMask = document.getElementById('modalMask');
+const modalInput = document.getElementById('modalInput');
+const modalArea = document.getElementById('modalArea');
+const modalTitle = document.getElementById('modalTitle');
+
+async function loadPanelData() {
+  const tbody = document.getElementById('panelBody');
+  const btn = document.getElementById('btnRefreshPanel');
+  
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">⏳ Obteniendo base de datos...</td></tr>';
+  btn.disabled = true;
+
+  const res = await fetchAPI({ action: 'get_panel', token: sessionToken });
+  btn.disabled = false;
+
+  if (!res.ok) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">❌ Error: ${res.msg}</td></tr>`;
+    return;
+  }
+  renderPanelTable(res.rows, res.estados);
+}
+
+function renderPanelTable(rows, estados) {
+  const tbody = document.getElementById('panelBody');
+  tbody.innerHTML = '';
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No hay registros en la hoja TAREO hoy.</td></tr>';
+    return;
+  }
+
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    
+    const tdColab = document.createElement('td');
+    tdColab.innerHTML = `<div style="font-weight:900; font-size:14px; color:var(--white);">${r.colab}</div>
+                         <div style="font-size:11px; color:var(--muted); margin-top:4px;">ESTADO: ${r.estado}</div>`;
+    
+    const tdTipo = document.createElement('td'); tdTipo.innerHTML = `<span style="font-weight:700">${r.tipo || '-'}</span>`;
+    const tdTareo = document.createElement('td'); tdTareo.innerHTML = `<span class="st-${r.tareo}">${r.tareo || ''}</span>`;
+    
+    const tdMin = document.createElement('td'); 
+    tdMin.textContent = r.min || '';
+    if (r.min > 0) { tdMin.style.color = 'var(--danger)'; tdMin.style.fontWeight = 'bold'; }
+
+    const tdNewT = document.createElement('td');
+    const sel = document.createElement('select'); sel.className = 'tdSelect';
+    estados.forEach(e => {
+      const opt = document.createElement('option'); opt.value = e; opt.textContent = e || '—';
+      if (r.newT === e) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (r.remG <= 0) sel.disabled = true;
+    
+    sel.onchange = async () => {
+      sel.disabled = true; 
+      const res = await fetchAPI({ action: 'update_cell', token: sessionToken, fila: r.fila, colLetra: 'G', valor: sel.value });
+      if (res.ok) {
+        if (!res.unchanged && res.remaining <= 0) sel.disabled = true; else sel.disabled = false;
+      } else {
+        alert(res.msg);
+        sel.value = r.newT; 
+        sel.disabled = false;
+      }
+    };
+    tdNewT.appendChild(sel);
+
+    const tdNewM = document.createElement('td');
+    tdNewM.appendChild(createEditBtn(r.newM, r.remH, 'H', r.fila, true));
+    
+    const tdObs = document.createElement('td');
+    tdObs.appendChild(createEditBtn(r.obs, r.remI, 'I', r.fila, false));
+
+    tr.append(tdColab, tdTipo, tdTareo, tdMin, tdNewT, tdNewM, tdObs);
+    tbody.appendChild(tr);
+  });
+}
+
+function createEditBtn(val, rem, colLetra, fila, isNum) {
+  const wrap = document.createElement('div'); wrap.style.display = 'flex'; wrap.style.alignItems = 'center';
+  const span = document.createElement('span'); span.className = 'tdVal'; span.textContent = val || '';
+  const btn = document.createElement('button'); btn.className = 'tdBtn'; btn.textContent = '✏️';
+  
+  if (rem <= 0) btn.style.display = 'none';
+  btn.onclick = () => {
+    editContext = { fila: fila, col: colLetra, spanElement: span, btnElement: btn };
+    openModal(isNum ? 'panel_min' : 'panel_obs', span.textContent);
+  };
+  wrap.append(span, btn); return wrap;
+}
+
+function openModal(mode, initialValue) {
+  modalMode = mode; modalInput.style.display = 'none'; modalArea.style.display = 'none';
+  if (mode === 'panel_min') {
+    modalTitle.textContent = 'Nuevos Minutos'; modalInput.style.display = 'block';
+    modalInput.value = initialValue || ''; modalInput.placeholder = '0'; modalInput.setAttribute('inputmode', 'numeric');
+  } else if (mode === 'panel_obs') {
+    modalTitle.textContent = 'Observación Supervisor'; modalArea.style.display = 'block';
+    modalArea.value = initialValue || ''; modalArea.placeholder = 'Detalle de justificación...';
+  }
+  modalMask.classList.add('show');
+  setTimeout(() => { if (mode.includes('obs')) modalArea.focus(); else modalInput.focus(); }, 100);
+}
+
+function closeModal() {
+  modalMask.classList.remove('show');
+  modalInput.blur(); modalArea.blur(); modalMode = null;
+}
+
+document.getElementById('modalOk').onclick = async () => {
+  let val = modalMode === 'panel_min' ? modalInput.value.trim() : modalArea.value.trim();
+  if (editContext) {
+    const { fila, col, spanElement, btnElement } = editContext;
+    if (col === 'H' && val && isNaN(val)) { alert('Solo números permitidos en minutos'); return; }
+    
+    closeModal();
+    btnElement.disabled = true;
+    
+    const res = await fetchAPI({ action: 'update_cell', token: sessionToken, fila: fila, colLetra: col, valor: val });
+    
+    if (res.ok) {
+      spanElement.textContent = val;
+      if (!res.unchanged && res.remaining <= 0) btnElement.style.display = 'none';
+      btnElement.disabled = false;
+    } else {
+      alert(res.msg);
+      btnElement.disabled = false;
+    }
+  }
+};
+</script>
+</body>
+</html>
